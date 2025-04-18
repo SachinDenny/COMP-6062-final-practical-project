@@ -1,0 +1,9 @@
+body{
+    font-size: 14px;
+    background-color: aquamarine;
+}
+@media(min-width: 700px){
+    body{
+        background-color: white;
+    }
+}
