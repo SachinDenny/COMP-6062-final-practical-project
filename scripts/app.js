@@ -16,30 +16,27 @@ const app = Vue.createApp({
         wind: '',
         description: ''
       },
-      dictionaryInput: '',
       definition: {
         word: '',
         phonetic: '',
-        meaning: ''
-      },
-      posts: [] // for fetchData()
+        definition: ''
+      }
     };
   },
   methods: {
     randomUser() {
-      fetch('http://comp6062.liamstewart.ca/random-user-profile')
+      fetch('https://comp6062.liamstewart.ca/random-user-profile')
         .then(response => {
           if (response.ok) {
             return response.json();
           } else {
             console.log('An error occurred. Please try again.');
-            throw new Error('Fetch failed');
           }
         })
         .then(data => {
-          this.user.name = `${data.firstName} ${data.lastName}`;
+          this.user.name = `${data.first_name} ${data.last_name}`;
           this.user.age = data.age;
-          this.user.picture = data.picture;
+          this.user.picture = data.profile_picture;
         })
         .catch(error => {
           console.log('Total Failure', error);
@@ -47,22 +44,20 @@ const app = Vue.createApp({
     },
 
     getWeather() {
-      const { city, province, country } = this.weatherInput;
-      const url = `http://comp6062.liamstewart.ca/weather-information?city=${encodeURIComponent(city)}&province=${encodeURIComponent(province)}&country=${encodeURIComponent(country)}`;
-      
+      const { city, province, country } = this.weatherInput;// Construct the weather API URL using user i/ps
+      const url = `https://comp6062.liamstewart.ca/weather-information?city=${encodeURIComponent(city)}&province=${encodeURIComponent(province)}&country=${encodeURIComponent(country)}`;
       fetch(url)
         .then(response => {
           if (response.ok) {
             return response.json();
           } else {
-            console.log('Failed to fetch weather.');
-            throw new Error('Weather fetch failed');
+            console.log('An error occurred. Please try again.');
           }
         })
         .then(data => {
           this.weather.temperature = data.temperature;
-          this.weather.wind = data.wind;
-          this.weather.description = data.description;
+          this.weather.wind = data.wind_speed;
+          this.weather.description = data.weather_description;
         })
         .catch(error => {
           console.log('Weather error:', error);
@@ -70,28 +65,36 @@ const app = Vue.createApp({
     },
 
     defineWord() {
-      fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${this.dictionaryInput}`)
+      if (!this.wordQuery.trim()) return;
+        const url = `https://comp6062.liamstewart.ca/define?word=${this.wordQuery}`;
+  
+        fetch(url)
         .then(response => {
-          if (response.ok) return response.json();
-          throw new Error('Failed to fetch definition');
+          if (response.ok) {
+            return response.json();
+          } else {
+            console.log('An error occurred. Please try again.');
+          }
         })
-        .then(data => {
-          const entry = data[0];
-          this.definition.word = entry.word;
-          this.definition.phonetic = entry.phonetic || 'N/A';
-          this.definition.meaning = entry.meanings[0].definitions[0].definition;
-        })
+          .then(data => {
+            const first = data[0];
+            this.definition = {
+              word: first.word,
+              phonetic: first.phonetic,
+              definition: first.definition
+            };
+          })
+
         .catch(error => {
-          console.error('Definition Fetch Error:', error);
+          console.error("Definition Fetch Error:", error);
+          alert("Failed to fetch definition. Please check the word.");
         });
-    },
+    }
   },
 
-  // Call randomUser & weather right after instance is created
   created() {
     this.randomUser();
     this.getWeather();
-    this.defineWord();
   },
 });
 
